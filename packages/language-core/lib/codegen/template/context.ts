@@ -302,7 +302,9 @@ export function createTemplateCodegenContext(
 		if (!all.some(([, offsets]) => offsets.size)) {
 			return;
 		}
-		yield `// @ts-ignore${newLine}`; // #2304
+		if (typeof process !== 'undefined' && process.env.VUE_TSC === '1') {
+			yield `// @ts-ignore${newLine}`; // #2304
+		}
 		yield `[`;
 		for (const [varName, map] of all) {
 			for (const [source, offsets] of map) {
@@ -315,6 +317,7 @@ export function createTemplateCodegenContext(
 							offset,
 							{
 								...codeFeatures.additionalCompletion,
+								...codeFeatures.reportTs2304,
 								...codeFeatures.semanticWithoutHighlight,
 							},
 						];
@@ -324,7 +327,10 @@ export function createTemplateCodegenContext(
 							varName,
 							source,
 							offset,
-							codeFeatures.additionalCompletion,
+							{
+								...codeFeatures.additionalCompletion,
+								...codeFeatures.reportTs2304,
+							},
 						];
 					}
 					yield `,`;
