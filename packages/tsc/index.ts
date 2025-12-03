@@ -4,7 +4,6 @@ import * as core from '@vue/language-core';
 const windowsPathReg = /\\/g;
 
 export function run(tscPath = require.resolve('typescript/lib/tsc')) {
-	process.env.VUE_TSC = '1';
 	let runExtensions = ['.vue'];
 	let extensionsChangedException: Error | undefined;
 

@@ -82,12 +82,6 @@ const raw = {
 			shouldReport: (_source, code) => String(code) !== '6133',
 		},
 	},
-	reportTs2304: {
-		verification: {
-			// https://typescript.tv/errors/#ts2304
-			shouldReport: (_source, code) => String(code) === '2304',
-		},
-	},
 } satisfies Record<string, VueCodeInformation>;
 
 export const codeFeatures = raw as {
