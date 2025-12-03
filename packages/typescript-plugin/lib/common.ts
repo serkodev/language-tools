@@ -18,6 +18,8 @@ export function createVueLanguageServiceProxy<T>(
 				return getCompletionsAtPosition(ts, language, asScriptId, vueOptions, target[p]);
 			case 'getCompletionEntryDetails':
 				return getCompletionEntryDetails(language, target[p]);
+			case 'getSemanticDiagnostics':
+				return getSemanticDiagnosticsProxy(language, asScriptId, target[p]);
 			case 'getCodeFixesAtPosition':
 				return getCodeFixesAtPosition(target[p]);
 			case 'getDefinitionAndBoundSpan':
@@ -200,6 +202,65 @@ export function resolveCompletionEntryDetails(
 			}
 		}
 	}
+}
+
+function getSemanticDiagnosticsProxy<T>(
+	language: Language<T>,
+	asScriptId: (fileName: string) => T,
+	getSemanticDiagnostics: ts.LanguageService['getSemanticDiagnostics'],
+): ts.LanguageService['getSemanticDiagnostics'] {
+	return (fileName: string) => {
+		fileName = fileName.replace(windowsPathReg, '/');
+
+		const diagnostics = getSemanticDiagnostics(fileName);
+		const sourceScript = language.scripts.get(asScriptId(fileName));
+		const serviceScript = sourceScript?.generated?.languagePlugin.typescript?.getServiceScript(
+			sourceScript.generated?.root,
+		);
+		const template = sourceScript?.generated?.root instanceof VueVirtualCode
+			? sourceScript.generated.root.sfc.template
+			: undefined;
+		if (serviceScript && template) {
+			const templateStart = template.startTagEnd;
+			const templateEnd = template.endTagStart;
+			for (const diagnostic of diagnostics) {
+				if (
+					diagnostic.code === 2339
+					&& typeof diagnostic.start === 'number'
+					&& typeof diagnostic.length === 'number'
+				) {
+					const diagnosticEnd = diagnostic.start + diagnostic.length;
+					if (diagnostic.start >= templateStart && diagnosticEnd <= templateEnd) {
+						let shouldConvert = false;
+						for (const [, map] of language.maps.forEach(serviceScript.code)) {
+							const generatedRange = map
+								.toGeneratedRange(
+									diagnostic.start,
+									diagnosticEnd,
+									false,
+									data =>
+										typeof data.completion === 'object'
+										&& !!(
+											data.completion.isAdditional
+											|| data.completion.onlyImport
+										),
+								)
+								.next().value;
+							if (generatedRange) {
+								shouldConvert = true;
+								break;
+							}
+						}
+						if (shouldConvert) {
+							diagnostic.code = 2304;
+						}
+					}
+				}
+			}
+		}
+
+		return diagnostics;
+	};
 }
 
 function getCodeFixesAtPosition(
