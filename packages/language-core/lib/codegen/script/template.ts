@@ -26,7 +26,7 @@ export function* generateTemplate(
 }
 
 function* generateTemplateCtx(
-	{ vueCompilerOptions, script, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
+	{ vueCompilerOptions, script, scriptSetup, styleCodegen, scriptSetupRanges, fileName }: ScriptCodegenOptions,
 	ctx: ScriptCodegenContext,
 	selfType: string | undefined,
 ): Generator<Code> {
@@ -62,8 +62,24 @@ function* generateTemplateCtx(
 		exps.push([`{} as { $emit: ${emitTypes.join(` & `)} }`]);
 	}
 
-	if (scriptSetupRanges?.defineProps) {
-		propTypes.push(`typeof ${scriptSetupRanges.defineProps.name ?? names.props}`);
+	if (scriptSetupRanges) {
+		const { defineProps, withDefaults } = scriptSetupRanges;
+		const props = defineProps?.arg
+			? `typeof ${defineProps.name ?? names.props}`
+			: defineProps?.typeArg
+			? scriptSetup?.generic
+				? withDefaults?.arg
+					? `__VLS_WithDefaultsGlobal<${names.Props}, typeof ${names.defaults}>`
+					: names.Props
+				: `typeof ${defineProps.name ?? names.props} & ${
+					withDefaults?.arg
+						? `__VLS_WithDefaultsGlobal<${names.Props}, typeof ${names.defaults}>`
+						: names.Props
+				}`
+			: undefined;
+		if (props) {
+			propTypes.push(props);
+		}
 	}
 	if (scriptSetupRanges?.defineModel.length) {
 		propTypes.push(names.ModelProps);
