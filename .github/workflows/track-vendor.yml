@@ -64,7 +64,7 @@ jobs:
             exit 0
           fi
 
-          git commit -m "Update track snapshot ($HASH)"
+          git commit -m "chore(vendor): update vendor snapshot"
 
           git push --set-upstream origin "$BRANCH"
 
@@ -72,5 +72,5 @@ jobs:
             --draft \
             --base "${GITHUB_REF_NAME}" \
             --head "$BRANCH" \
-            --title "Update track snapshot ($HASH)" \
-            --body "Automated snapshot update. Hash: $HASH"
+            --title "chore(vendor): update vendor `$HASH`" \
+            --body "Vendor snapshot updated. Hash: $HASH"
