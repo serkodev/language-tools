@@ -3,7 +3,7 @@
 exports[`ensure vendor is updated 1`] = `
 [
   {
-    "commit": "96acaa52902feb1320e1d8ec8936b8669cca4471",
+    "commit": "",
     "path": "src/services/types.ts",
     "repo": "microsoft/TypeScript",
   },
