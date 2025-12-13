@@ -70,7 +70,7 @@ jobs:
 
           gh pr create \
             --draft \
-            --base master \
+            --base "${GITHUB_REF_NAME}" \
             --head "$BRANCH" \
             --title "Update track snapshot ($HASH)" \
             --body "Automated snapshot update. Hash: $HASH"
