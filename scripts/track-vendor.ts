@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { crc32 } from 'node:zlib';
 import { startVitest } from 'vitest/node';
 
-const vitest = await startVitest('test', ['track-vendor'], { update: true, run: true, env: { TEST_VENDOR: '1' } });
+const vitest = await startVitest('test', ['vendor'], { update: true, run: true, env: { TEST_VENDOR: '1' } });
 await vitest?.close();
 
 const dir = path.dirname(fileURLToPath(import.meta.url));
