@@ -73,4 +73,4 @@ jobs:
             --base "${GITHUB_REF_NAME}" \
             --head "$BRANCH" \
             --title "chore(vendor): update vendor \`$HASH\`" \
-            --body "Vendor snapshot updated. Hash: $HASH"
+            --body "Vendor snapshot updated. Hash: \`$HASH\`"
