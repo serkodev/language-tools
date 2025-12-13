@@ -7,5 +7,10 @@ exports[`ensure vendor is updated 1`] = `
     "path": "src/services/types.ts",
     "repo": "microsoft/TypeScript",
   },
+  {
+    "commit": "a134f3050c22fe80954241467cd429811792a81d",
+    "path": "src/services/htmlFormatter.ts",
+    "repo": "microsoft/vscode-html-languageservice",
+  },
 ]
 `;
