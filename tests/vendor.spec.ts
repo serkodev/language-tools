@@ -2,6 +2,7 @@ import { expect, test } from 'vitest';
 
 const VENDOR_LIST: { repo: string; path: string }[] = [
 	{ repo: 'microsoft/TypeScript', path: 'src/services/types.ts' },
+	{ repo: 'microsoft/vscode-html-languageservice', path: 'src/services/htmlFormatter.ts' },
 ];
 
 test.skipIf(process.env.TEST_VENDOR !== '1')(`ensure vendor is updated`, async () => {
