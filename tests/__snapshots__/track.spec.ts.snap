@@ -3,7 +3,7 @@
 exports[`snapshot 1`] = `
 [
   {
-    "commit": "96acaa52902feb1320e1d8ec8936b8669cca447d",
+    "commit": "96acaa52902feb1320e1d8ec8936b8669cca4471",
     "path": "src/services/types.ts",
     "repo": "microsoft/TypeScript",
   },
