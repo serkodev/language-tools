@@ -1,4 +1,4 @@
-name: Track snapshot branch + draft PR
+name: Track vendor
 
 on:
   workflow_dispatch:
@@ -8,7 +8,7 @@ permissions:
   pull-requests: write
 
 jobs:
-  track-snapshot:
+  track-vendor:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,30 +23,22 @@ jobs:
 
       - run: pnpm install
 
-      - name: Compute track hash (TS writes GITHUB_OUTPUT)
+      - name: Track vendor and get hash
         id: track
         shell: bash
         run: |
-          node ./scripts/track.ts
+          node ./scripts/track-vendor.ts
 
-      - name: Check remote branch existence
-        if: steps.track.outputs.track_hash != ''
-        id: remote
-        shell: bash
-        run: |
-          HASH="${{ steps.track.outputs.track_hash }}"
-          BRANCH="track/$HASH"
-
-          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
-            echo "Remote branch already exists: $BRANCH"
-            echo "exists=true" >> "$GITHUB_OUTPUT"
+          if git diff --quiet; then
+            echo "No unstaged changes."
+            echo "dirty=false" >> "$GITHUB_OUTPUT"
           else
-            echo "Remote branch does not exist: $BRANCH"
-            echo "exists=false" >> "$GITHUB_OUTPUT"
+            echo "Found unstaged changes."
+            echo "dirty=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Create branch, commit snapshot, push, and open draft PR
-        if: steps.track.outputs.track_hash != '' && steps.remote.outputs.exists == 'false'
+      - name: Create branch and draft PR
+        if: steps.track.outputs.track_hash != '' && steps.track.outputs.dirty == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -54,7 +46,13 @@ jobs:
           HASH="${{ steps.track.outputs.track_hash }}"
           BRANCH="track/$HASH"
 
-          git switch -c "$BRANCH"
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Remote branch already exists: $BRANCH"
+            exit 0
+          else
+            echo "Remote branch does not exist: $BRANCH"
+            git switch -c "$BRANCH"
+          fi
 
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"

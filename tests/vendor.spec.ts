@@ -1,11 +1,11 @@
-import { describe, expect, test } from 'vitest';
+import { expect, test } from 'vitest';
 
-const TRACK_LIST: { repo: string; path: string }[] = [
+const VENDOR_LIST: { repo: string; path: string }[] = [
 	{ repo: 'microsoft/TypeScript', path: 'src/services/types.ts' },
 ];
 
-test.skipIf(process.env.TEST_TRACK !== '1')(`snapshot`, async () => {
-	const promises = TRACK_LIST.map(async item => ({
+test.skipIf(process.env.TEST_VENDOR !== '1')(`ensure vendor is updated`, async () => {
+	const promises = VENDOR_LIST.map(async item => ({
 		...item,
 		commit: await getRemoteCommit(item.repo, item.path),
 	}));

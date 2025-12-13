@@ -1,5 +1,15 @@
 // Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
 
+exports[`ensure vendor is updated 1`] = `
+[
+  {
+    "commit": "96acaa52902feb1320e1d8ec8936b8669cca447d",
+    "path": "src/services/types.ts",
+    "repo": "microsoft/TypeScript",
+  },
+]
+`;
+
 exports[`snapshot 1`] = `
 [
   {
