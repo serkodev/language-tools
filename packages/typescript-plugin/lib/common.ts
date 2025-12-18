@@ -440,6 +440,43 @@ export function postprocessLanguageService<T>(
 	}
 }
 
+export function languageServiceIgnoreFiles(
+	languageService: ts.LanguageService,
+	shouldIgnoreMarkdown: (fileName: string) => boolean,
+): ts.LanguageService {
+	const fileNameFallbacks: Partial<
+		{
+			[K in keyof ts.LanguageService as ts.LanguageService[K] extends (file: string, ...args: any) => any ? K : never]:
+				ts.LanguageService[K] extends (...args: [string, ...any[]]) => infer R ? R : never;
+		}
+	> = {
+		getSemanticDiagnostics: [],
+		getSyntacticDiagnostics: [],
+		getQuickInfoAtPosition: undefined,
+		getCompletionsAtPosition: undefined,
+		getRenameInfo: { canRename: false, localizedErrorMessage: '' },
+		getEncodedSemanticClassifications: { spans: [], endOfLineState: 0 },
+		getSemanticClassifications: [],
+		// TODO: more methods?
+	};
+
+	return new Proxy(languageService, {
+		get(target, p, receiver) {
+			const original = Reflect.get(target, p, receiver);
+			if (!(p in fileNameFallbacks)) {
+				return original;
+			}
+			const key = p as keyof typeof fileNameFallbacks;
+			return function(fileName: string, ...rest: unknown[]) {
+				if (typeof fileName === 'string' && shouldIgnoreMarkdown(fileName)) {
+					return fileNameFallbacks[key];
+				}
+				return original.apply(target, [fileName, ...rest]);
+			};
+		},
+	});
+}
+
 export function resolveCompletionResult<T>(
 	ts: typeof import('typescript'),
 	language: Language<T>,

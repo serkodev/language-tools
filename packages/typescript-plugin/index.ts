@@ -3,6 +3,7 @@ import { createLanguageServicePlugin } from '@volar/typescript/lib/quickstart/cr
 import * as core from '@vue/language-core';
 import type * as ts from 'typescript';
 import {
+	languageServiceIgnoreFiles,
 	postprocessLanguageService,
 	preprocessLanguageService,
 	resolveCompletionEntryDetails,
@@ -36,6 +37,12 @@ export = createLanguageServicePlugin(
 			id => id,
 		);
 		addVueCommands();
+
+		info.languageService = languageServiceIgnoreFiles(info.languageService, (fileName: string) => {
+			const lower = fileName.toLowerCase();
+			return lower.endsWith('.md')
+				&& !vueOptions.vitePressExtensions.some(ext => lower.endsWith(ext.toLowerCase()));
+		});
 
 		let _language: core.Language<string> | undefined;
 		preprocessLanguageService(info.languageService, () => _language);
