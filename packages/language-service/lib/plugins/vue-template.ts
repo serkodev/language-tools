@@ -272,6 +272,11 @@ export function create(
 								continue;
 							}
 							const tsCompletion = convertCompletionInfo(ts, autoImport, document, position, entry => entry.data);
+							// Deduplicate if the component already exists in the template or is a global component
+							tsCompletion.items = tsCompletion.items.filter(tsItem =>
+								!componentSet.has(tsItem.label)
+								&& !componentSet.has(capitalize(camelize(tsItem.label)))
+							);
 							const placeholder = htmlCompletion.items[autoImportPlaceholderIndex]!;
 							for (const tsItem of tsCompletion.items) {
 								if (placeholder.textEdit) {
