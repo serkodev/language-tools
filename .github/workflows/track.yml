@@ -1,0 +1,78 @@
+name: Track snapshot branch + draft PR
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  track-snapshot:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+
+      - run: pnpm install
+
+      - name: Compute track hash (TS writes GITHUB_OUTPUT)
+        id: track
+        shell: bash
+        run: |
+          node ./scripts/track.ts
+
+      - name: Check remote branch existence
+        if: steps.track.outputs.track_hash != ''
+        id: remote
+        shell: bash
+        run: |
+          HASH="${{ steps.track.outputs.track_hash }}"
+          BRANCH="track/$HASH"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Remote branch already exists: $BRANCH"
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Remote branch does not exist: $BRANCH"
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Create branch, commit snapshot, push, and open draft PR
+        if: steps.track.outputs.track_hash != '' && steps.remote.outputs.exists == 'false'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          HASH="${{ steps.track.outputs.track_hash }}"
+          BRANCH="track/$HASH"
+
+          git switch -c "$BRANCH"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          git add .
+
+          if git diff --cached --quiet; then
+            echo "Nothing to commit. Exit successfully."
+            exit 0
+          fi
+
+          git commit -m "Update track snapshot ($HASH)"
+
+          git push --set-upstream origin "$BRANCH"
+
+          gh pr create \
+            --draft \
+            --base master \
+            --head "$BRANCH" \
+            --title "Update track snapshot ($HASH)" \
+            --body "Automated snapshot update. Hash: $HASH"
